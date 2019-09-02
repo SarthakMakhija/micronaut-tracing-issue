@@ -22,8 +22,7 @@ open class UserFilter(
     @NewSpan("doFilter")
     override fun doFilterOnce(request: HttpRequest<*>, chain: ServerFilterChain): Publisher<MutableHttpResponse<*>> {
 
-        //Quick throwaway implementation
-        return Flowable.just(userVerificationService.isVerified())
+        return Flowable.fromCallable { userVerificationService.isVerified() }
             .flatMap {
                 if (it)
                     chain.proceed(request)
