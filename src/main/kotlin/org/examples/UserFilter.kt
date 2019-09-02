@@ -22,41 +22,15 @@ open class UserFilter(
     @NewSpan("doFilter")
     override fun doFilterOnce(request: HttpRequest<*>, chain: ServerFilterChain): Publisher<MutableHttpResponse<*>> {
 
-        //OPTION - (1)
-        //This block of code does not print trace id in the logs of UserVerificationService because
-        //method is not instrumented for tracing.
-//        return Flowable.just(userVerificationService.isVerified())
-//            .flatMap {
-//                if (it)
-//                    chain.proceed(request)
-//                else
-//                    throw RuntimeException("test")
-//            }
-//            .doOnSubscribe { logger.info("filtering ${request.path}") }
-
-
-        //OPTION - (2)
-        //This block of code does not print trace id in the logs of UserVerificationService because
-        //method is not instrumented for tracing.
-
-        //Also, traceid that gets logged in ->
-        // doOnSubscribe { logger.info("isVerified") } and
-        // doOnSubscribe { logger.info("doFilter") }
-        // is different probably because tracing filter decorates them with different trace ids.
-        val userVerificationFlowable: Flowable<Boolean> = Flowable
-            .just(userVerificationService.isVerified())
-            .doOnSubscribe { logger.info("isVerified") }
-
-        val proceedFlowable: Flowable<MutableHttpResponse<*>> = Flowable
-            .fromPublisher(chain.proceed(request))
-            .doOnSubscribe { logger.info("doFilter") }
-
-        return userVerificationFlowable.flatMap {
-            if (it)
-                proceedFlowable
-            else
-                throw RuntimeException("test")
-        }
+        //Quick throwaway implementation
+        return Flowable.just(userVerificationService.isVerified())
+            .flatMap {
+                if (it)
+                    chain.proceed(request)
+                else
+                    throw RuntimeException("test")
+            }
+            .doOnSubscribe { logger.info("filtering ${request.path}") }
     }
 }
 
